@@ -5,6 +5,7 @@ import {
     signInWithEmail,
     signUpWithEmail,
 } from '@/services/firebase/auth'
+import { createUserDocument } from '@/services/firebase/users'
 
 export const AuthPage = () => {
     const [mode, setMode] = useState<'signin' | 'signup'>('signin')
@@ -19,7 +20,8 @@ export const AuthPage = () => {
         setError('')
         setLoading(true)
         try {
-            await signInWithGoogle()
+            const user = await signInWithGoogle()
+            await createUserDocument(user)
             navigate('/')
         } catch (e: any) {
             setError(e.message)
@@ -32,11 +34,13 @@ export const AuthPage = () => {
         setError('')
         setLoading(true)
         try {
+            let user
             if (mode === 'signin') {
-                await signInWithEmail(email, password)
+                user = await signInWithEmail(email, password)
             } else {
-                await signUpWithEmail(email, password, name)
+                user = await signUpWithEmail(email, password, name)
             }
+            await createUserDocument(user)
             navigate('/')
         } catch (e: any) {
             setError(e.message.replace('Firebase: ', ''))
@@ -57,7 +61,7 @@ export const AuthPage = () => {
         >
             {/* ── CARD ── */}
             <div
-                className="w-full max-w-[420px] bg-card rounded-2xl
+                className="w-full max-width-420px bg-card rounded-2xl
                    border border-border shadow-sm px-8 py-9"
             >
                 {/* Logo + tagline at top of card */}
@@ -200,7 +204,7 @@ export const AuthPage = () => {
 
                 {/* Privacy note */}
                 <p className="text-[10px] text-muted text-center mt-4 leading-relaxed">
-                    🔒 Your journal is completely private.<br />
+                    🔒 Your journals are completely private.<br />
                 </p>
 
             </div>
