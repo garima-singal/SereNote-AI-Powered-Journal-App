@@ -61,7 +61,7 @@ export const AuthPage = () => {
         >
             {/* ── CARD ── */}
             <div
-                className="w-full max-width-420px bg-card rounded-2xl
+                className="w-full max-w-[420px] bg-card rounded-2xl
                    border border-border shadow-sm px-8 py-9"
             >
                 {/* Logo + tagline at top of card */}
