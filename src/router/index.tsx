@@ -1,80 +1,62 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { WritePage } from '@/pages/WritePage'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 
 // ── PROTECTED ROUTE ──────────────────────────────────────────
-// This is a wrapper component that guards private pages
-// If the user is NOT logged in, it redirects them to /auth
-// If they ARE logged in, it renders whatever is inside it
+// Guards private pages — redirects to /auth if not logged in
 export const ProtectedRoute = ({
     children
 }: {
     children: React.ReactNode
 }) => {
-    // Read the user and loading state from our Zustand store
     const { user, loading } = useAuthStore()
 
     // While Firebase is still checking auth state, show nothing
     // This prevents a flash of the login page for logged-in users
     if (loading) return null
 
-    // If no user is logged in, redirect to the auth page
-    // 'replace' means the /auth page replaces the current history entry
-    // so the user can't press Back to get to the protected page
+    // Not logged in — redirect to auth
     if (!user) return <Navigate to="/auth" replace />
 
-    // User is logged in — render the protected content
     return <>{children}</>
 }
 
 // ── ROUTER ───────────────────────────────────────────────────
-// createBrowserRouter sets up all our app's routes
-// Each object is one route: { path, element }
 export const router = createBrowserRouter([
     {
-        // /auth is the login page — publicly accessible
+        // Public route — login/signup page
         path: '/auth',
         element: <AuthPage />,
     },
     {
-        // '/' is the root — everything inside needs login
+        // Protected root — AppShell wraps all inner pages
         path: '/',
-        // AppShell is our sidebar + layout wrapper
-        // ProtectedRoute guards it — redirects to /auth if not logged in
         element: (
             <ProtectedRoute>
                 <AppShell />
             </ProtectedRoute>
         ),
-        // These are nested routes — they render INSIDE AppShell
         children: [
             {
-                // The index route renders when path is exactly '/'
+                // Dashboard — default page at '/'
                 index: true,
                 element: <DashboardPage />,
             },
             {
-                // Write new entry
+                // New entry — no ID yet, WritePage creates one on first save
                 path: 'write',
-                element: (
-                    <div className="p-8 text-ink font-lora text-xl">
-                        Write page — coming soon
-                    </div>
-                ),
+                element: <WritePage />,
             },
             {
-                // Edit existing entry by ID
+                // Edit existing entry by Firestore document ID
                 path: 'write/:entryId',
-                element: (
-                    <div className="p-8 text-ink font-lora text-xl">
-                        Edit entry — coming soon
-                    </div>
-                ),
+                element: <WritePage />,
             },
             {
-                // Bookmarks page
+                // Bookmarks page — coming soon
                 path: 'bookmarks',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">
@@ -83,7 +65,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                // Timeline / all entries
+                // Timeline / all entries — coming soon
                 path: 'timeline',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">
@@ -92,7 +74,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                // Settings
+                // Settings — coming soon
                 path: 'settings',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">
@@ -101,7 +83,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                // Profile
+                // Profile — coming soon
                 path: 'profile',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">
@@ -110,7 +92,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                // Insights
+                // Insights — coming soon
                 path: 'insights',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">
@@ -119,7 +101,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                // Search
+                // Search — coming soon
                 path: 'search',
                 element: (
                     <div className="p-8 text-ink font-lora text-xl">

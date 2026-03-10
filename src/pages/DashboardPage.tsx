@@ -122,9 +122,10 @@ export const DashboardPage = () => {
                                         {entry.bodyText || 'No content yet...'}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {entry.mood && (
+                                        {/* Show first mood emoji if any */}
+                                        {entry.moods.length > 0 && (
                                             <span className="text-xs">
-                                                {MOODS.find(m => m.value === entry.mood)?.emoji}
+                                                {MOODS.find(m => m.value === entry.moods[0])?.emoji}
                                             </span>
                                         )}
                                         <span className="text-[10px] text-muted">{format(entry.createdAt, 'MMM d')}</span>
@@ -139,26 +140,23 @@ export const DashboardPage = () => {
                 {/* RIGHT COLUMN */}
                 <div className="flex flex-col gap-4">
 
-                    {/* Streak Card — compact horizontal layout */}
+                    {/* Streak Card */}
                     <div className="bg-card border border-border rounded-2xl overflow-hidden">
                         <div className="px-4 py-2.5 border-b border-border">
                             <div className="text-sm font-semibold text-ink">Writing Streak</div>
                         </div>
-                        <div className="px-6 py-3 flex items-center gap-4">
-                            {/* Number */}
+                        <div className="px-4 py-3 flex items-center gap-4">
                             <div className="shrink-0 text-center">
-                                <span className="font-lora text-4xl font-semibold text-ink leading-none block">
+                                <span className="font-lora text-2xl font-semibold text-ink leading-none block">
                                     {entries.length > 0 ? '1' : '0'}
                                 </span>
-                                <span className="text-[12px] text-muted">day streak 🔥</span>
+                                <span className="text-[9px] text-muted">day streak 🔥</span>
                             </div>
-                            {/* Divider */}
-                            <div className="w-px h-10 bg-border shrink-0" />
-                            {/* Heatmap */}
+                            <div className="w-px h-8 bg-border shrink-0" />
                             <div>
-                                <div className="flex flex-col gap-[5px]">
+                                <div className="flex flex-col gap-[3px]">
                                     {Array.from({ length: 4 }).map((_, row) => (
-                                        <div key={row} className="flex gap-[5px]">
+                                        <div key={row} className="flex gap-[3px]">
                                             {Array.from({ length: 7 }).map((_, col) => {
                                                 const i = row * 7 + col
                                                 const hasEntry = i >= 24
@@ -191,9 +189,9 @@ export const DashboardPage = () => {
                                     {lastYearEntry.bodyText || 'No content...'}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {lastYearEntry.mood && (
+                                    {lastYearEntry.moods.length > 0 && (
                                         <span className="text-xs">
-                                            {MOODS.find(m => m.value === lastYearEntry.mood)?.emoji}
+                                            {MOODS.find(m => m.value === lastYearEntry.moods[0])?.emoji}
                                         </span>
                                     )}
                                     <span className="text-[10px] text-muted">

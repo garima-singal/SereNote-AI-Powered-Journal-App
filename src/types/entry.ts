@@ -5,8 +5,8 @@ export interface Entry {
     title: string        // Entry title
     body: string        // TipTap HTML content
     bodyText: string        // Plain text (for search + AI)
-    mood: MoodType | null
-    moodScore: number | null // 1-5 numeric score
+    moods: MoodType[]
+    moodScore: number | null
     tags: string[]
     type: 'entry' | 'quick-note'
     wordCount: number

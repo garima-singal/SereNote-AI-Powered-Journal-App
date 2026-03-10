@@ -14,20 +14,18 @@ import {
 import { db } from './config'
 import type { Entry } from '@/types/entry'
 
-// Helper — converts a Firestore doc snapshot into our Entry type
-// Firestore stores dates as Timestamps, we convert them to JS Dates
 const toEntry = (id: string, data: any): Entry => ({
     id,
     title: data.title ?? '',
     body: data.body ?? '',
     bodyText: data.bodyText ?? '',
-    mood: data.mood ?? null,
+    // Support both old single mood and new multiple moods
+    moods: data.moods ?? (data.mood ? [data.mood] : []),
     moodScore: data.moodScore ?? null,
     tags: data.tags ?? [],
     type: data.type ?? 'entry',
     wordCount: data.wordCount ?? 0,
     location: data.location ?? null,
-    // Convert Firestore Timestamp → JS Date
     createdAt: data.createdAt instanceof Timestamp
         ? data.createdAt.toDate() : new Date(),
     updatedAt: data.updatedAt instanceof Timestamp
@@ -40,26 +38,20 @@ const toEntry = (id: string, data: any): Entry => ({
     sentimentScore: data.sentimentScore ?? null,
 })
 
-// Reference to a user's entries subcollection
 const entriesRef = (uid: string) =>
     collection(db, 'users', uid, 'entries')
 
-// ── CREATE ───────────────────────────────────────────────────
-// Creates a new blank entry and returns its ID
-// Called when user clicks "New Entry"
 export const createEntry = async (uid: string): Promise<string> => {
     const ref = await addDoc(entriesRef(uid), {
         title: '',
         body: '',
         bodyText: '',
-        mood: null,
+        moods: [],
         moodScore: null,
         tags: [],
         type: 'entry',
         wordCount: 0,
         location: null,
-        // serverTimestamp() sets the time on Firebase's server
-        // This is more reliable than using the user's local clock
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         status: 'draft',
@@ -68,13 +60,9 @@ export const createEntry = async (uid: string): Promise<string> => {
         aiReflection: null,
         sentimentScore: null,
     })
-    // ref.id is the auto-generated Firestore document ID
     return ref.id
 }
 
-// ── UPDATE ───────────────────────────────────────────────────
-// Updates specific fields on an existing entry
-// We use Partial<Entry> so you can update just title, or just body, etc.
 export const updateEntry = async (
     uid: string,
     entryId: string,
@@ -83,13 +71,10 @@ export const updateEntry = async (
     const ref = doc(db, 'users', uid, 'entries', entryId)
     await updateDoc(ref, {
         ...data,
-        // Always update 'updatedAt' when anything changes
         updatedAt: serverTimestamp(),
     })
 }
 
-// ── GET ONE ──────────────────────────────────────────────────
-// Fetches a single entry by ID
 export const getEntry = async (
     uid: string,
     entryId: string
@@ -100,22 +85,16 @@ export const getEntry = async (
     return toEntry(snap.id, snap.data())
 }
 
-// ── GET ALL ──────────────────────────────────────────────────
-// Fetches all non-deleted entries, newest first
-// Used by Dashboard (recent entries) and Timeline
 export const getEntries = async (uid: string): Promise<Entry[]> => {
     const q = query(
         entriesRef(uid),
-        where('isDeleted', '==', false),   // exclude soft-deleted
-        orderBy('createdAt', 'desc')        // newest first
+        where('isDeleted', '==', false),
+        orderBy('createdAt', 'desc')
     )
     const snap = await getDocs(q)
     return snap.docs.map((d) => toEntry(d.id, d.data()))
 }
 
-// ── SOFT DELETE ──────────────────────────────────────────────
-// Marks entry as deleted instead of actually deleting it
-// Gives users a 30-day recovery window
 export const deleteEntry = async (
     uid: string,
     entryId: string
