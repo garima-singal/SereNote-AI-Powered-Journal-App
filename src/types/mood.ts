@@ -1,4 +1,5 @@
-import type { MoodType } from './entry'
+// Import MoodType from entry.ts where it's defined
+import type { MoodType } from '@/types/entry'
 
 // Full definition for each mood — used across the whole app
 export interface MoodDefinition {
