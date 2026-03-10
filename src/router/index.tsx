@@ -1,13 +1,7 @@
-// These are React Router's core pieces
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-
-// We import all our page components
-// These don't exist yet — we'll create them one by one
 import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { AppShell } from '@/components/layout/AppShell'
-
-// useAuthStore gives us access to the current user
 import { useAuthStore } from '@/store/authStore'
 
 // ── PROTECTED ROUTE ──────────────────────────────────────────
@@ -60,6 +54,78 @@ export const router = createBrowserRouter([
                 // The index route renders when path is exactly '/'
                 index: true,
                 element: <DashboardPage />,
+            },
+            {
+                // Write new entry
+                path: 'write',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Write page — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Edit existing entry by ID
+                path: 'write/:entryId',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Edit entry — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Bookmarks page
+                path: 'bookmarks',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Bookmarks — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Timeline / all entries
+                path: 'timeline',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Timeline — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Settings
+                path: 'settings',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Settings — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Profile
+                path: 'profile',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Profile — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Insights
+                path: 'insights',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Insights — coming soon
+                    </div>
+                ),
+            },
+            {
+                // Search
+                path: 'search',
+                element: (
+                    <div className="p-8 text-ink font-lora text-xl">
+                        Search — coming soon
+                    </div>
+                ),
             },
         ],
     },
