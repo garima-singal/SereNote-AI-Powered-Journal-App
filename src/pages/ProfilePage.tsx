@@ -7,7 +7,10 @@ import { format, differenceInDays } from 'date-fns'
 
 export const ProfilePage = () => {
     const { user } = useAuthStore()
-    const { entries } = useEntries()
+    const { entries, loading, refetch } = useEntries()
+
+    // Always fetch fresh data when this page is visited
+    useEffect(() => { refetch() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const [editing, setEditing] = useState(false)
     const [displayName, setDisplayName] = useState(user?.displayName ?? '')
@@ -110,6 +113,29 @@ export const ProfilePage = () => {
     const daysSinceJoined = joinedDate
         ? differenceInDays(new Date(), joinedDate)
         : null
+
+    if (loading) {
+        return (
+            <div className="px-4 py-5 sm:px-6 sm:py-6 max-w-2xl mx-auto">
+                <div className="h-8 bg-surface animate-pulse rounded-xl w-24 mb-6" />
+                <div className="bg-card border border-border rounded-2xl p-6 mb-4 flex items-center gap-4">
+                    <div className="w-16 h-16 bg-surface animate-pulse rounded-full shrink-0" />
+                    <div className="flex-1">
+                        <div className="h-5 bg-surface animate-pulse rounded w-1/2 mb-2" />
+                        <div className="h-3 bg-surface animate-pulse rounded w-2/3" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-card border border-border rounded-2xl p-4">
+                            <div className="h-3 bg-surface animate-pulse rounded w-2/3 mb-2" />
+                            <div className="h-6 bg-surface animate-pulse rounded w-1/2" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="px-4 py-5 sm:px-6 sm:py-6 max-w-2xl mx-auto">
@@ -370,8 +396,8 @@ const StatCard = ({
     accent?: boolean
 }) => (
     <div className={`rounded-xl p-3 border ${accent
-            ? 'bg-accent-pale border-accent/20'
-            : 'bg-bg border-border'
+        ? 'bg-accent-pale border-accent/20'
+        : 'bg-bg border-border'
         }`}>
         <div className={`font-lora text-xl font-semibold mb-0.5 ${accent ? 'text-accent' : 'text-ink'
             }`}>

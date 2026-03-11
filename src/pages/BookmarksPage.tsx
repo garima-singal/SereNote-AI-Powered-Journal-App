@@ -115,26 +115,38 @@ export const BookmarksPage = () => {
                 </div>
             )}
 
-            {/* ── LOADING ── */}
+            {/* ── LOADING SKELETONS ── */}
             {loading && (
-                <div className="text-center py-16 text-sm text-muted">
-                    Loading bookmarks...
+                <div className="flex flex-col gap-3">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden">
+                            <div className="px-4 py-4">
+                                <div className="h-4 bg-surface animate-pulse rounded-lg w-2/3 mb-2" />
+                                <div className="h-3 bg-surface animate-pulse rounded-lg w-full mb-1" />
+                                <div className="h-3 bg-surface animate-pulse rounded-lg w-4/5" />
+                            </div>
+                            <div className="px-4 py-3 border-t border-border bg-surface/50">
+                                <div className="h-3 bg-surface animate-pulse rounded-lg w-1/3" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
             {/* ── EMPTY STATE ── */}
             {!loading && bookmarks.length === 0 && (
                 <div className="text-center py-16 px-4">
-                    <div className="text-4xl mb-4">◈</div>
+                    <div className="w-16 h-16 bg-accent-pale rounded-2xl flex items-center
+                          justify-center text-2xl mx-auto mb-4">◈</div>
                     <div className="font-lora text-lg text-ink mb-2">No bookmarks yet</div>
-                    <div className="text-sm text-muted mb-6 leading-relaxed">
+                    <div className="text-sm text-muted mb-6 leading-relaxed max-w-[260px] mx-auto">
                         While reading an entry, tap the bookmark icon to save it here
                         for quick access later.
                     </div>
                     <button
                         onClick={() => navigate('/timeline')}
-                        className="px-6 py-2.5 bg-accent text-white rounded-xl
-                       text-sm font-medium hover:opacity-90"
+                        className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm
+                       font-medium hover:bg-accent-dark transition-colors shadow-sm"
                     >
                         Browse entries
                     </button>

@@ -2,24 +2,32 @@ import {
     collection,
     doc,
     addDoc,
-    updateDoc,
     getDoc,
     getDocs,
+    updateDoc,
     query,
     orderBy,
-    where,
     serverTimestamp,
     Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
 import type { Entry } from '@/types/entry'
 
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+const entriesRef = (uid: string) =>
+    collection(db, 'users', uid, 'entries')
+
+// Maps raw Firestore data → typed Entry
+// NOTE: We intentionally do NOT filter isDeleted here —
+// filtering is done in JS to avoid the composite-index requirement
+// (Firestore needs an index for where() + orderBy() on different fields)
 const toEntry = (id: string, data: any): Entry => ({
     id,
     title: data.title ?? '',
     body: data.body ?? '',
     bodyText: data.bodyText ?? '',
-    // Support both old single mood and new multiple moods
+    // Support both old single-mood and new multi-mood format
     moods: data.moods ?? (data.mood ? [data.mood] : []),
     moodScore: data.moodScore ?? null,
     tags: data.tags ?? [],
@@ -27,19 +35,21 @@ const toEntry = (id: string, data: any): Entry => ({
     wordCount: data.wordCount ?? 0,
     location: data.location ?? null,
     createdAt: data.createdAt instanceof Timestamp
-        ? data.createdAt.toDate() : new Date(),
+        ? data.createdAt.toDate()
+        : new Date(),
     updatedAt: data.updatedAt instanceof Timestamp
-        ? data.updatedAt.toDate() : new Date(),
+        ? data.updatedAt.toDate()
+        : new Date(),
     status: data.status ?? 'draft',
     isDeleted: data.isDeleted ?? false,
     deletedAt: data.deletedAt instanceof Timestamp
-        ? data.deletedAt.toDate() : null,
+        ? data.deletedAt.toDate()
+        : null,
     aiReflection: data.aiReflection ?? null,
     sentimentScore: data.sentimentScore ?? null,
 })
 
-const entriesRef = (uid: string) =>
-    collection(db, 'users', uid, 'entries')
+// ── CREATE ────────────────────────────────────────────────────────────────────
 
 export const createEntry = async (uid: string): Promise<string> => {
     const ref = await addDoc(entriesRef(uid), {
@@ -63,6 +73,8 @@ export const createEntry = async (uid: string): Promise<string> => {
     return ref.id
 }
 
+// ── UPDATE ────────────────────────────────────────────────────────────────────
+
 export const updateEntry = async (
     uid: string,
     entryId: string,
@@ -75,6 +87,8 @@ export const updateEntry = async (
     })
 }
 
+// ── GET ONE ───────────────────────────────────────────────────────────────────
+
 export const getEntry = async (
     uid: string,
     entryId: string
@@ -85,15 +99,21 @@ export const getEntry = async (
     return toEntry(snap.id, snap.data())
 }
 
+// ── GET ALL ───────────────────────────────────────────────────────────────────
+// Uses orderBy('createdAt') only — NO where() clause.
+// Filtering isDeleted in JS avoids the Firestore composite index requirement.
+// Without the composite index, where('isDeleted','==',false) + orderBy('createdAt')
+// silently returns 0 results until you manually create the index in Firebase Console.
+
 export const getEntries = async (uid: string): Promise<Entry[]> => {
-    const q = query(
-        entriesRef(uid),
-        where('isDeleted', '==', false),
-        orderBy('createdAt', 'desc')
-    )
+    const q = query(entriesRef(uid), orderBy('createdAt', 'desc'))
     const snap = await getDocs(q)
-    return snap.docs.map((d) => toEntry(d.id, d.data()))
+    return snap.docs
+        .map(d => toEntry(d.id, d.data()))
+        .filter(e => !e.isDeleted)   // filter soft-deleted in JS
 }
+
+// ── SOFT DELETE ───────────────────────────────────────────────────────────────
 
 export const deleteEntry = async (
     uid: string,

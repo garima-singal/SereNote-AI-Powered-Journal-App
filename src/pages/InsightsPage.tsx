@@ -215,8 +215,30 @@ export const InsightsPage = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64 text-sm text-muted">
-                Loading insights…
+            <div className="px-4 py-5 sm:px-6 sm:py-6 max-w-3xl mx-auto">
+                <div className="h-8 bg-surface animate-pulse rounded-xl w-32 mb-6" />
+                {/* Stats row skeleton */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-card border border-border rounded-2xl p-4">
+                            <div className="h-3 bg-surface animate-pulse rounded w-2/3 mb-2" />
+                            <div className="h-7 bg-surface animate-pulse rounded w-1/2" />
+                        </div>
+                    ))}
+                </div>
+                {/* Chart skeleton */}
+                <div className="bg-card border border-border rounded-2xl p-5 mb-4">
+                    <div className="h-4 bg-surface animate-pulse rounded w-1/3 mb-4" />
+                    <div className="h-40 bg-surface animate-pulse rounded-xl" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[1, 2].map(i => (
+                        <div key={i} className="bg-card border border-border rounded-2xl p-5">
+                            <div className="h-4 bg-surface animate-pulse rounded w-1/3 mb-4" />
+                            <div className="h-32 bg-surface animate-pulse rounded-xl" />
+                        </div>
+                    ))}
+                </div>
             </div>
         )
     }
@@ -225,11 +247,12 @@ export const InsightsPage = () => {
         return (
             <div className="px-4 py-5 sm:px-6 sm:py-6 max-w-3xl mx-auto">
                 <h1 className="font-lora text-2xl font-semibold text-ink mb-2">Insights</h1>
-                <div className="text-center py-20">
-                    <div className="text-4xl mb-4">✦</div>
+                <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-accent-pale rounded-2xl flex items-center
+                          justify-center text-2xl mx-auto mb-4">✦</div>
                     <div className="font-lora text-lg text-ink mb-2">No data yet</div>
-                    <div className="text-sm text-muted">
-                        Write a few entries to start seeing your patterns here.
+                    <div className="text-sm text-muted leading-relaxed max-w-[240px] mx-auto">
+                        Write a few entries to start seeing your patterns and insights here.
                     </div>
                 </div>
             </div>

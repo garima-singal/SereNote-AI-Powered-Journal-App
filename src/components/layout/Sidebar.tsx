@@ -2,118 +2,154 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { logOut } from '@/services/firebase/auth'
 
-// Nav items — path, label, icon (emoji for now)
-const NAV_ITEMS = [
-    { path: '/', label: 'Dashboard', icon: '◇' },
-    { path: '/bookmarks', label: 'Bookmarks', icon: '◈' },
-    { path: '/settings', label: 'Settings', icon: '◎' },
-    { path: '/profile', label: 'Profile', icon: '◉' },
-]
-
 interface SidebarProps {
-    // Called when user taps a nav item or closes on mobile
     onClose?: () => void
 }
+
+const NAV = [
+    { to: '/', label: 'Dashboard', icon: '⌂', end: true },
+    { to: '/timeline', label: 'Timeline', icon: '◷', end: false },
+    { to: '/bookmarks', label: 'Bookmarks', icon: '◈', end: false },
+    { to: '/insights', label: 'Insights', icon: '◎', end: false },
+    { to: '/search', label: 'Search', icon: '⌕', end: false },
+]
+
+const BOTTOM_NAV = [
+    { to: '/profile', label: 'Profile', icon: '○', end: false },
+    { to: '/settings', label: 'Settings', icon: '◇', end: false },
+]
 
 export const Sidebar = ({ onClose }: SidebarProps) => {
     const { user } = useAuthStore()
     const navigate = useNavigate()
 
-    const handleLogout = async () => {
+    const handleSignOut = async () => {
         await logOut()
         navigate('/auth')
     }
 
+    const linkClass = ({ isActive }: { isActive: boolean }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
+     font-medium transition-all duration-150 group
+     ${isActive
+            ? 'bg-accent text-white shadow-sm'
+            : 'text-ink2 hover:bg-surface hover:text-ink'
+        }`
+
     return (
-        <aside className="w-[260px] h-full bg-card border-r border-border
-                      flex flex-col overflow-hidden">
+        <div className="flex flex-col h-full bg-card border-r border-border w-[220px]">
 
             {/* ── LOGO ── */}
-            <div className="px-5 py-5 border-b border-border">
-                <div className="font-lora text-xl font-semibold text-ink">
-                    Sere<span className="text-accent">Note</span>
+            <div className="px-5 py-5 border-b border-border flex items-center justify-between">
+                <div>
+                    <div className="font-lora text-lg font-semibold text-ink tracking-tight">
+                        SereNote
+                    </div>
+                    <div className="text-[10px] text-muted">Your private journal</div>
                 </div>
-                <div className="text-[10px] text-muted mt-0.5 uppercase tracking-widest">
-                    Your private space
-                </div>
+                {/* Close button — mobile only */}
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="lg:hidden text-muted hover:text-ink transition-colors
+                       w-7 h-7 flex items-center justify-center rounded-lg
+                       hover:bg-surface text-lg leading-none"
+                        aria-label="Close sidebar"
+                    >
+                        ×
+                    </button>
+                )}
             </div>
 
-            {/* ── NEW ENTRY BUTTON ── */}
+            {/* ── NEW ENTRY ── */}
             <div className="px-4 pt-4 pb-2">
                 <button
                     onClick={() => { navigate('/write'); onClose?.() }}
-                    className="w-full flex items-center justify-center gap-2
-                     py-2 bg-accent text-white rounded-xl text-sm
-                     font-medium hover:opacity-90 transition-opacity"
+                    className="w-full py-2.5 bg-accent text-white rounded-xl text-sm
+                     font-medium hover:bg-accent-dark transition-colors
+                     flex items-center justify-center gap-2 shadow-sm"
                 >
                     <span className="text-base leading-none">+</span>
                     New Entry
                 </button>
             </div>
 
-            {/* ── NAV ITEMS ── */}
-            <nav className="flex-1 px-3 py-2 overflow-y-auto">
-                {NAV_ITEMS.map((item) => (
+            {/* ── MAIN NAV ── */}
+            <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto">
+                {NAV.map(({ to, label, icon, end }) => (
                     <NavLink
-                        key={item.path}
-                        to={item.path}
-                        end={item.path === '/'}
-                        onClick={() => onClose?.()}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2.5 rounded-xl
-               text-sm transition-colors mb-0.5
-               ${isActive
-                                ? 'bg-accent-pale text-accent font-medium'
-                                : 'text-ink2 hover:bg-surface hover:text-ink'
-                            }`
-                        }
+                        key={to}
+                        to={to}
+                        end={end}
+                        className={linkClass}
+                        onClick={onClose}
                     >
-                        <span className="text-base leading-none">{item.icon}</span>
-                        {item.label}
+                        {({ isActive }) => (
+                            <>
+                                <span className={`text-base w-5 text-center leading-none shrink-0
+                  ${isActive ? 'text-white' : 'text-muted group-hover:text-ink'}`}>
+                                    {icon}
+                                </span>
+                                {label}
+                            </>
+                        )}
+                    </NavLink>
+                ))}
+
+                {/* Divider */}
+                <div className="my-2 border-t border-border" />
+
+                {BOTTOM_NAV.map(({ to, label, icon, end }) => (
+                    <NavLink
+                        key={to}
+                        to={to}
+                        end={end}
+                        className={linkClass}
+                        onClick={onClose}
+                    >
+                        {({ isActive }) => (
+                            <>
+                                <span className={`text-base w-5 text-center leading-none shrink-0
+                  ${isActive ? 'text-white' : 'text-muted group-hover:text-ink'}`}>
+                                    {icon}
+                                </span>
+                                {label}
+                            </>
+                        )}
                     </NavLink>
                 ))}
             </nav>
 
             {/* ── USER FOOTER ── */}
             <div className="px-4 py-4 border-t border-border">
-                {/* User info row */}
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3">
                     {user?.photoURL ? (
                         <img
                             src={user.photoURL}
-                            alt="avatar"
+                            alt={user.displayName ?? ''}
                             referrerPolicy="no-referrer"
-                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                            className="w-8 h-8 rounded-full object-cover ring-2 ring-border shrink-0"
                         />
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-accent-pale
-                            flex items-center justify-center shrink-0">
-                            <span className="text-xs font-semibold text-accent">
-                                {(user?.displayName ?? user?.email ?? 'U')[0].toUpperCase()}
-                            </span>
+                        <div className="w-8 h-8 rounded-full bg-accent-pale text-accent
+                            flex items-center justify-center text-xs font-semibold shrink-0">
+                            {user?.displayName?.[0] ?? '?'}
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-ink truncate">
-                            {user?.displayName ?? user?.email ?? 'User'}
+                        <div className="text-xs font-medium text-ink truncate">
+                            {user?.displayName ?? 'You'}
                         </div>
-                        <div className="text-[10px] text-muted truncate">Free plan</div>
+                        <button
+                            onClick={handleSignOut}
+                            className="text-[10px] text-muted hover:text-terra transition-colors"
+                        >
+                            Sign out
+                        </button>
                     </div>
                 </div>
-
-                {/* Logout button */}
-                <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2
-                     rounded-xl text-xs text-muted
-                     hover:bg-terra-pale hover:text-terra
-                     transition-colors"
-                >
-                    <span className="text-sm">→</span>
-                    Sign out
-                </button>
             </div>
 
-        </aside>
+        </div>
     )
 }
