@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
     signInWithGoogle,
     signInWithEmail,
@@ -22,9 +23,11 @@ export const AuthPage = () => {
         try {
             const user = await signInWithGoogle()
             await createUserDocument(user)
+            toast.success('Welcome to SereNote! ')
             navigate('/')
         } catch (e: any) {
             setError(e.message)
+            toast.error('Sign in failed. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -37,13 +40,18 @@ export const AuthPage = () => {
             let user
             if (mode === 'signin') {
                 user = await signInWithEmail(email, password)
+                await createUserDocument(user)
+                toast.success('Welcome back! ')
             } else {
                 user = await signUpWithEmail(email, password, name)
+                await createUserDocument(user)
+                toast.success('Account created! Welcome to SereNote ')
             }
-            await createUserDocument(user)
             navigate('/')
         } catch (e: any) {
-            setError(e.message.replace('Firebase: ', ''))
+            const msg = e.message.replace('Firebase: ', '')
+            setError(msg)
+            toast.error(mode === 'signin' ? 'Sign in failed.' : 'Sign up failed.')
         } finally {
             setLoading(false)
         }
@@ -64,7 +72,7 @@ export const AuthPage = () => {
                 className="w-full max-w-[420px] bg-card rounded-2xl
                    border border-border shadow-sm px-8 py-9"
             >
-                {/* Logo + tagline at top of card */}
+                {/* Logo + tagline */}
                 <div className="text-center mb-7">
                     <div className="font-lora text-3xl font-semibold text-ink">
                         Sere<span className="text-accent">Note</span>
@@ -72,14 +80,12 @@ export const AuthPage = () => {
                     <p className="font-lora italic text-muted text-sm mt-1.5 leading-relaxed">
                         "A quiet place to understand yourself better."
                     </p>
-
-                    {/* Thin divider */}
                     <div className="mt-5 h-px bg-border w-16 mx-auto" />
                 </div>
 
                 {/* Mode heading */}
                 <h2 className="text-base font-semibold text-ink mb-0.5">
-                    {mode === 'signin' ? 'Welcome' : 'Create your journal'}
+                    {mode === 'signin' ? 'Welcome back' : 'Create your journal'}
                 </h2>
                 <p className="text-xs text-muted mb-5">
                     {mode === 'signin'
@@ -140,7 +146,7 @@ export const AuthPage = () => {
                     />
                 </div>
 
-                {/* Error */}
+                {/* Inline error */}
                 {error && (
                     <div className="mb-4 text-xs text-terra bg-terra-pale
                           px-3 py-2.5 rounded-lg border border-terra/20">
@@ -179,7 +185,6 @@ export const AuthPage = () => {
                      hover:bg-border transition-colors disabled:opacity-50
                      flex items-center justify-center gap-2.5"
                 >
-                    {/* Google G icon using SVG */}
                     <svg width="16" height="16" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -204,7 +209,7 @@ export const AuthPage = () => {
 
                 {/* Privacy note */}
                 <p className="text-[10px] text-muted text-center mt-4 leading-relaxed">
-                    🔒 Your journals are completely private.<br />
+                    🔒 Your journals are completely private.
                 </p>
 
             </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { Toaster } from 'sonner'
 
 export const AppShell = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -23,6 +24,18 @@ export const AppShell = () => {
 
     return (
         <div className="flex h-screen overflow-hidden bg-bg">
+
+            {/* ── TOAST NOTIFICATIONS ─────────────────────────────── */}
+            <Toaster
+                position="top-right"
+                richColors
+                toastOptions={{
+                    style: {
+                        fontFamily: 'DM Sans, sans-serif',
+                        fontSize: '13px',
+                    }
+                }}
+            />
 
             {/* ── DESKTOP SIDEBAR ─────────────────────────────────── */}
             <div className="hidden lg:flex shrink-0">
