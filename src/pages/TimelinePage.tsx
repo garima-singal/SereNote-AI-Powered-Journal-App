@@ -12,10 +12,17 @@ export const TimelinePage = () => {
     const navigate = useNavigate()
 
     const [search, setSearch] = useState('')
-    const [moodFilter, setMoodFilter] = useState<MoodType | null>(null)
+    const [moodFilters, setMoodFilters] = useState<MoodType[]>([])   // ← array now
     const [tagFilter, setTagFilter] = useState<string | null>(null)
     const [sort, setSort] = useState<SortOrder>('newest')
     const [showFilters, setShowFilters] = useState(false)
+
+    // Toggle a mood in/out of the filter array
+    const toggleMood = (mood: MoodType) => {
+        setMoodFilters(prev =>
+            prev.includes(mood) ? prev.filter(m => m !== mood) : [...prev, mood]
+        )
+    }
 
     // All unique tags across all entries
     const allTags = useMemo(() => {
@@ -27,6 +34,7 @@ export const TimelinePage = () => {
     // Filtered + sorted entries
     const filtered = useMemo(() => {
         let list = [...entries]
+
         if (search.trim()) {
             const q = search.toLowerCase()
             list = list.filter(e =>
@@ -35,15 +43,23 @@ export const TimelinePage = () => {
                 e.tags.some(t => t.toLowerCase().includes(q))
             )
         }
-        if (moodFilter) list = list.filter(e => e.moods.includes(moodFilter))
+
+        // Show entries that have ANY of the selected moods
+        if (moodFilters.length > 0) {
+            list = list.filter(e =>
+                moodFilters.some(m => e.moods.includes(m))
+            )
+        }
+
         if (tagFilter) list = list.filter(e => e.tags.includes(tagFilter))
+
         list.sort((a, b) =>
             sort === 'newest'
                 ? b.createdAt.getTime() - a.createdAt.getTime()
                 : a.createdAt.getTime() - b.createdAt.getTime()
         )
         return list
-    }, [entries, search, moodFilter, tagFilter, sort])
+    }, [entries, search, moodFilters, tagFilter, sort])
 
     // Group by month
     const grouped = useMemo(() => {
@@ -59,11 +75,11 @@ export const TimelinePage = () => {
         return groups
     }, [filtered])
 
-    const activeFilters = [moodFilter, tagFilter, search.trim()].filter(Boolean).length
+    const activeFilters = moodFilters.length + (tagFilter ? 1 : 0) + (search.trim() ? 1 : 0)
 
     const clearFilters = () => {
         setSearch('')
-        setMoodFilter(null)
+        setMoodFilters([])
         setTagFilter(null)
     }
 
@@ -145,17 +161,25 @@ export const TimelinePage = () => {
                     {sort === 'newest' ? '↓ Newest' : '↑ Oldest'}
                 </button>
 
-                {/* Active filter chips — scrollable on mobile */}
+                {/* Active filter chips */}
                 <div className="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0">
-                    {moodFilter && (
-                        <span className="flex items-center gap-1 px-2.5 py-1 bg-accent-pale
-                             text-accent rounded-xl text-xs font-medium border
-                             border-accent whitespace-nowrap shrink-0">
-                            {MOODS.find(m => m.value === moodFilter)?.emoji}{' '}
-                            {MOODS.find(m => m.value === moodFilter)?.label}
-                            <button onClick={() => setMoodFilter(null)} className="hover:opacity-60 ml-0.5">×</button>
-                        </span>
-                    )}
+                    {moodFilters.map(mood => {
+                        const def = MOODS.find(m => m.value === mood)
+                        return def ? (
+                            <span
+                                key={mood}
+                                className="flex items-center gap-1 px-2.5 py-1 bg-accent-pale
+                                     text-accent rounded-xl text-xs font-medium border
+                                     border-accent whitespace-nowrap shrink-0"
+                            >
+                                {def.emoji} {def.label}
+                                <button
+                                    onClick={() => toggleMood(mood)}
+                                    className="hover:opacity-60 ml-0.5"
+                                >×</button>
+                            </span>
+                        ) : null
+                    })}
                     {tagFilter && (
                         <span className="flex items-center gap-1 px-2.5 py-1 bg-accent-pale
                              text-accent rounded-xl text-xs font-medium border
@@ -183,26 +207,43 @@ export const TimelinePage = () => {
 
                     {/* Mood filter */}
                     <div className="mb-4">
-                        <div className="text-[10px] font-semibold text-muted uppercase
-                            tracking-wider mb-2">
-                            Filter by mood
-                        </div>
-                        {/* Scrollable on mobile */}
-                        <div className="flex gap-1.5 flex-wrap">
-                            {MOODS.map(m => (
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                                Filter by mood
+                            </div>
+                            {moodFilters.length > 0 && (
                                 <button
-                                    key={m.value}
-                                    onClick={() => setMoodFilter(moodFilter === m.value ? null : m.value)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl
-                               border text-xs transition-all whitespace-nowrap ${moodFilter === m.value
-                                            ? `${m.color} border-current font-medium`
-                                            : 'border-border text-ink2 bg-bg hover:border-accent hover:bg-accent-pale hover:text-accent'
-                                        }`}
+                                    onClick={() => setMoodFilters([])}
+                                    className="text-[10px] text-muted hover:text-terra transition-colors"
                                 >
-                                    {m.emoji} {m.label}
+                                    Clear moods
                                 </button>
-                            ))}
+                            )}
                         </div>
+                        <div className="flex gap-1.5 flex-wrap">
+                            {MOODS.map(m => {
+                                const active = moodFilters.includes(m.value)
+                                return (
+                                    <button
+                                        key={m.value}
+                                        onClick={() => toggleMood(m.value)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                                           border text-xs transition-all whitespace-nowrap ${active
+                                                ? `${m.color} border-current font-medium`
+                                                : 'border-border text-ink2 bg-bg hover:border-accent hover:bg-accent-pale hover:text-accent'
+                                            }`}
+                                    >
+                                        {m.emoji} {m.label}
+                                        {active && <span className="ml-0.5 opacity-60">✓</span>}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        {moodFilters.length > 1 && (
+                            <p className="text-[10px] text-muted mt-2">
+                                Showing entries with any of {moodFilters.length} selected moods
+                            </p>
+                        )}
                     </div>
 
                     {/* Tag filter */}
@@ -278,8 +319,6 @@ export const TimelinePage = () => {
             {/* ── GROUPED ENTRIES ── */}
             {!loading && grouped.map(group => (
                 <div key={group.label} className="mb-8">
-
-                    {/* Month label */}
                     <div className="flex items-center gap-3 mb-3">
                         <div className="font-lora text-sm sm:text-base font-semibold text-ink shrink-0">
                             {group.label}
@@ -289,8 +328,6 @@ export const TimelinePage = () => {
                             {group.entries.length} {group.entries.length === 1 ? 'entry' : 'entries'}
                         </div>
                     </div>
-
-                    {/* Cards */}
                     <div className="flex flex-col gap-2">
                         {group.entries.map(entry => (
                             <EntryCard
@@ -301,7 +338,6 @@ export const TimelinePage = () => {
                             />
                         ))}
                     </div>
-
                 </div>
             ))}
 
@@ -335,23 +371,15 @@ const EntryCard = ({
                  cursor-pointer group"
         >
             <div className="flex items-start justify-between gap-2 sm:gap-3">
-
-                {/* Left */}
                 <div className="flex-1 min-w-0">
-
-                    {/* Date */}
                     <div className="text-[10px] text-muted uppercase tracking-wider mb-1">
                         {format(entry.createdAt, 'EEE, MMM d · h:mm a')}
                     </div>
-
-                    {/* Title */}
                     <div
                         className="font-lora text-sm font-semibold text-ink mb-1
                        group-hover:text-accent transition-colors leading-snug"
                         dangerouslySetInnerHTML={{ __html: highlightedTitle }}
                     />
-
-                    {/* Preview — 1 line on mobile, 2 on desktop */}
                     {entry.bodyText && (
                         <div className="text-xs text-ink2 line-clamp-1 sm:line-clamp-2
                             leading-relaxed mb-2">
@@ -359,8 +387,6 @@ const EntryCard = ({
                             {entry.bodyText.length > 160 ? '…' : ''}
                         </div>
                     )}
-
-                    {/* Mood + tag chips */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                         {entry.moods.slice(0, 2).map(m => {
                             const def = MOODS.find(x => x.value === m)
@@ -387,7 +413,6 @@ const EntryCard = ({
                                 #{tag}
                             </span>
                         ))}
-                        {/* On mobile just show tag count */}
                         {entry.tags.length > 0 && (
                             <span className="text-[10px] text-muted sm:hidden">
                                 {entry.tags.length} tag{entry.tags.length > 1 ? 's' : ''}
@@ -395,13 +420,10 @@ const EntryCard = ({
                         )}
                     </div>
                 </div>
-
-                {/* Right — word count + arrow */}
                 <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className="text-[10px] text-muted">{entry.wordCount}w</span>
                     <span className="text-muted group-hover:text-accent transition-colors text-sm">→</span>
                 </div>
-
             </div>
         </div>
     )
