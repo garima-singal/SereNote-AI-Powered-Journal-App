@@ -348,20 +348,47 @@ export const DashboardPage = () => {
                 {/* Today's Prompt */}
                 <div className="bg-terra-pale border border-terra/20 rounded-2xl p-5
                         hover:shadow-sm transition-shadow duration-200">
-                    <div className="text-[10px] font-semibold text-terra uppercase
-                          tracking-wider mb-2.5">
-                        Today's Prompt
+                    <div className="flex items-center justify-between mb-2.5">
+                        <div className="text-[10px] font-semibold text-terra uppercase tracking-wider">
+                            {aiPrompt ? '✦ Your Prompt' : "Today's Prompt"}
+                        </div>
+                        {aiPromptTheme && (
+                            <span className="text-[10px] text-terra/60 italic">{aiPromptTheme}</span>
+                        )}
                     </div>
-                    <div className="font-lora italic text-sm text-ink leading-relaxed mb-4">
-                        "{prompt}"
+
+                    {aiPromptLoading ? (
+                        <div className="flex items-center gap-2 py-3">
+                            <div className="w-3 h-3 border border-terra border-t-transparent
+                              rounded-full animate-spin shrink-0" />
+                            <span className="text-xs text-muted italic">Crafting your prompt…</span>
+                        </div>
+                    ) : (
+                        <div className="font-lora italic text-sm text-ink leading-relaxed mb-4">
+                            "{prompt}"
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                        <button
+                            onClick={() => navigate(`/write?prompt=${encodeURIComponent(prompt)}`)}
+                            className="text-xs text-terra font-medium hover:underline transition-colors"
+                        >
+                            Write about this →
+                        </button>
+                        {aiOptIn && aiPromptFetched && (
+                            <button
+                                onClick={() => {
+                                    setAiPromptFetched(false)
+                                    setAiPrompt('')
+                                    setAiPromptTheme('')
+                                }}
+                                className="text-[10px] text-muted hover:text-terra transition-colors"
+                            >
+                                ↺ New prompt
+                            </button>
+                        )}
                     </div>
-                    <button
-                        onClick={() => navigate(`/write?prompt=${encodeURIComponent(prompt)}`)}
-                        className="text-xs text-terra font-medium hover:underline
-                       transition-colors"
-                    >
-                        Write about this →
-                    </button>
                 </div>
 
                 {/* Quick Stats */}
