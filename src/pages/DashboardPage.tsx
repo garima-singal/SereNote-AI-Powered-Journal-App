@@ -49,6 +49,7 @@ export const DashboardPage = () => {
     const [weeklyLoading, setWeeklyLoading] = useState(false)
     const [weeklyFetched, setWeeklyFetched] = useState(false)
     const [weeklyCount, setWeeklyCount] = useState(0)
+    const [weeklyDateRange, setWeeklyDateRange] = useState('')
 
     // Load aiOptIn from user settings
     useEffect(() => {
@@ -431,9 +432,15 @@ export const DashboardPage = () => {
                                 ✦ Week in Review
                             </div>
                             {weeklyFetched && (
-                                <span className="text-[10px] text-lav/60">
-                                    {weeklyCount} {weeklyCount === 1 ? 'entry' : 'entries'}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    {weeklyDateRange && (
+                                        <span className="text-[10px] text-lav/60">{weeklyDateRange}</span>
+                                    )}
+                                    <span className="text-[10px] text-lav/40">·</span>
+                                    <span className="text-[10px] text-lav/60">
+                                        {weeklyCount} {weeklyCount === 1 ? 'entry' : 'entries'}
+                                    </span>
+                                </div>
                             )}
                         </div>
 
@@ -457,6 +464,7 @@ export const DashboardPage = () => {
                             onClick={() => {
                                 setWeeklyFetched(false)
                                 setWeeklySummary('')
+                                setWeeklyDateRange('')
                                 generateWeeklySummary()
                             }}
                             disabled={weeklyLoading}

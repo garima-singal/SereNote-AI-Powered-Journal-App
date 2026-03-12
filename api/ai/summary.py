@@ -1,25 +1,3 @@
-# api/ai/summary.py
-# ─────────────────────────────────────────────────────────────
-# POST /api/ai/summary
-# Generates a weekly narrative summary from the last 7 days
-# of journal entries.
-#
-# Request body:
-#   {} (no params needed — always summarises last 7 days)
-#
-# Response:
-#   { "summary": "...", "weekOf": "2026-03-10", "entryCount": 5 }
-#
-# Flow:
-#   1. Verify Firebase token
-#   2. Check rate limit (3/day)
-#   3. Check AI opt-in
-#   4. Fetch entries from last 7 days
-#   5. Call GPT-4o-mini
-#   6. Save to weeklySummaries collection
-#   7. Return summary
-# ─────────────────────────────────────────────────────────────
-
 import sys
 import os
 import json
@@ -83,10 +61,14 @@ class handler(BaseHTTPRequestHandler):
         # ── 5. Check if summary already exists for this week ──
         existing = get_weekly_summary(uid, week_of)
         if existing:
+            date_from = (now - timedelta(days=7)).strftime("%b %d")
+            date_to   = now.strftime("%b %d, %Y")
             return send_json(self, {
                 "summary":    existing.get("summary", ""),
                 "weekOf":     week_of,
                 "entryCount": existing.get("entryCount", 0),
+                "dateFrom":   date_from,
+                "dateTo":     date_to,
                 "cached":     True,
             })
 
@@ -99,21 +81,32 @@ class handler(BaseHTTPRequestHandler):
             created_at = entry.get("createdAt")
             if created_at is None:
                 continue
-            # Handle both Firestore Timestamp and datetime
-            if hasattr(created_at, 'astimezone'):
-                entry_dt = created_at.astimezone(timezone.utc)
-            else:
-                entry_dt = datetime.fromtimestamp(
-                    created_at.timestamp(), tz=timezone.utc
-                )
-            if entry_dt >= cutoff:
-                week_entries.append(entry)
+            try:
+                # Firestore Timestamp has a .timestamp() method
+                if hasattr(created_at, 'timestamp'):
+                    entry_dt = datetime.fromtimestamp(
+                        created_at.timestamp(), tz=timezone.utc
+                    )
+                # Already a datetime
+                elif isinstance(created_at, datetime):
+                    if created_at.tzinfo is None:
+                        entry_dt = created_at.replace(tzinfo=timezone.utc)
+                    else:
+                        entry_dt = created_at.astimezone(timezone.utc)
+                else:
+                    continue
+                if entry_dt >= cutoff:
+                    week_entries.append(entry)
+            except Exception:
+                continue
+
+        # If less than 2 entries in last 7 days, use last 7 entries instead
+        # so users with sparse writing habits still get a summary
+        if len(week_entries) < 2:
+            week_entries = all_entries[:7]
 
         if not week_entries:
-            return send_error(self, "No entries found in the last 7 days.", 400)
-
-        if len(week_entries) < 2:
-            return send_error(self, "Write at least 2 entries this week to generate a summary.", 400)
+            return send_error(self, "No entries found. Write some entries first!", 400)
 
         # ── 7. Build context ──────────────────────────────────
         entry_texts = []
@@ -159,10 +152,16 @@ class handler(BaseHTTPRequestHandler):
             print(f"Warning: could not save weekly summary: {e}")
 
         # ── 10. Return ────────────────────────────────────────
+        # Calculate actual date range of entries included
+        date_from = (now - timedelta(days=7)).strftime("%b %d")
+        date_to   = now.strftime("%b %d, %Y")
+
         send_json(self, {
             "summary":    summary,
             "weekOf":     week_of,
             "entryCount": len(week_entries),
+            "dateFrom":   date_from,
+            "dateTo":     date_to,
             "cached":     False,
             "remaining":  limit - count,
         })
