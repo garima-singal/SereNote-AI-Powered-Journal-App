@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from http.server import BaseHTTPRequestHandler
 from lib.verify_auth   import verify_token
 from lib.rate_limit    import check_rate_limit
-from lib.firestore     import get_entries, get_user_settings
+from lib.firestore     import get_entries, get_user_settings, save_chat_message
 from lib.vector_store  import query_similar
 from lib.openai_client import chat_with_history
 from lib.helpers       import send_json, send_error, send_options, read_json_body, check_ai_opt_in
@@ -188,7 +188,17 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             return send_error(self, f"AI service error: {str(e)}", 500)
 
-        # ── 8. Return ─────────────────────────────────────────
+        # ── 8. Save messages to Firestore ────────────────────
+        try:
+            last_user_msg = next(
+                (m["content"] for m in reversed(messages) if m["role"] == "user"), ""
+            )
+            save_chat_message(uid, "user",      last_user_msg)
+            save_chat_message(uid, "assistant", reply)
+        except Exception as e:
+            print(f"Warning: could not save chat history: {e}")
+
+        # ── 9. Return ─────────────────────────────────────────
         send_json(self, {
             "reply":       reply,
             "entriesUsed": len(relevant_entries),

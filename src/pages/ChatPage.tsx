@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-// import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/store/authStore'
 import { auth } from '@/services/firebase/config'
 import { toast } from 'sonner'
 
@@ -30,13 +30,39 @@ const TypingDots = () => (
 )
 
 export const ChatPage = () => {
-    // const { user } = useAuthStore()
+    const { user } = useAuthStore()
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
     const [remaining, setRemaining] = useState<number | null>(null)
+    const [historyLoading, setHistoryLoading] = useState(true)
     const bottomRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
+
+    // Load chat history from Firestore on mount
+    useEffect(() => {
+        const loadHistory = async () => {
+            try {
+                const token = await auth.currentUser?.getIdToken()
+                if (!token) return
+                const res = await fetch('/api/ai/chat_history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                const data = await res.json()
+                if (res.ok && data.messages?.length > 0) {
+                    setMessages(data.messages.map((m: any) => ({
+                        role: m.role,
+                        content: m.content,
+                    })))
+                }
+            } catch {
+                // silently fail — start fresh
+            } finally {
+                setHistoryLoading(false)
+            }
+        }
+        loadHistory()
+    }, [])
 
     // Auto scroll to bottom on new messages
     useEffect(() => {
@@ -101,7 +127,17 @@ export const ChatPage = () => {
         }
     }
 
-    const clearChat = () => {
+    const clearChat = async () => {
+        try {
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) return
+            await fetch('/api/ai/chat_history', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            })
+        } catch {
+            // silently fail
+        }
         setMessages([])
         setRemaining(null)
         inputRef.current?.focus()
@@ -141,8 +177,16 @@ export const ChatPage = () => {
             {/* ── MESSAGES ── */}
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
 
+                {/* Loading history */}
+                {historyLoading && (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="w-5 h-5 border-2 border-lav border-t-transparent
+                            rounded-full animate-spin" />
+                    </div>
+                )}
+
                 {/* Empty state — suggested questions */}
-                {messages.length === 0 && (
+                {!historyLoading && messages.length === 0 && (
                     <div className="max-w-xl mx-auto">
                         <div className="text-center mb-8">
                             <div className="w-12 h-12 rounded-2xl bg-lav-pale border border-lav/20
@@ -181,8 +225,8 @@ export const ChatPage = () => {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className={`max-w-[80%] sm:max-w-[65%] ${msg.role === 'user'
-                            ? 'bg-ink text-bg rounded-2xl rounded-tr-sm px-4 py-2.5'
-                            : 'bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-2.5'
+                                ? 'bg-ink text-bg rounded-2xl rounded-tr-sm px-4 py-2.5'
+                                : 'bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-2.5'
                             }`}>
                             {msg.role === 'assistant' && (
                                 <div className="text-[10px] text-lav font-semibold mb-1">✦ Journal AI</div>

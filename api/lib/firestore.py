@@ -120,6 +120,45 @@ def save_weekly_summary(uid: str, week_of: str, summary: str, entry_count: int):
       })
 
 
+# ── CHAT HISTORY ─────────────────────────────────────────────
+
+def save_chat_message(uid: str, role: str, content: str):
+    """Append a single message to the user's chat history."""
+    db = get_db()
+    db.collection("users").document(uid)      .collection("chatHistory").add({
+          "role":      role,
+          "content":   content,
+          "createdAt": SERVER_TIMESTAMP,
+      })
+
+
+def get_chat_history(uid: str, limit: int = 30) -> list[dict]:
+    """Fetch the most recent chat messages, oldest first."""
+    db = get_db()
+    docs = db.collection("users").document(uid)             .collection("chatHistory")             .order_by("createdAt", direction="DESCENDING")             .limit(limit)             .stream()
+
+    messages = []
+    for doc in docs:
+        data = doc.to_dict()
+        messages.append({
+            "id":        doc.id,
+            "role":      data.get("role", "user"),
+            "content":   data.get("content", ""),
+            "createdAt": data.get("createdAt"),
+        })
+
+    # Reverse so oldest is first (chronological order)
+    return list(reversed(messages))
+
+
+def clear_chat_history(uid: str):
+    """Delete all chat messages for a user."""
+    db = get_db()
+    docs = db.collection("users").document(uid)             .collection("chatHistory")             .stream()
+    for doc in docs:
+        doc.reference.delete()
+
+
 def get_weekly_summary(uid: str, week_of: str) -> dict | None:
     """Fetch a weekly summary by week_of date string."""
     db = get_db()
