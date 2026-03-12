@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useAuthStore } from '@/store/authStore'
+// import { useAuthStore } from '@/store/authStore'
 import { auth } from '@/services/firebase/config'
 import { toast } from 'sonner'
 
@@ -30,7 +30,7 @@ const TypingDots = () => (
 )
 
 export const ChatPage = () => {
-    const { user } = useAuthStore()
+    // const { user } = useAuthStore()
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -225,8 +225,8 @@ export const ChatPage = () => {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className={`max-w-[80%] sm:max-w-[65%] ${msg.role === 'user'
-                                ? 'bg-ink text-bg rounded-2xl rounded-tr-sm px-4 py-2.5'
-                                : 'bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-2.5'
+                            ? 'bg-ink text-bg rounded-2xl rounded-tr-sm px-4 py-2.5'
+                            : 'bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-2.5'
                             }`}>
                             {msg.role === 'assistant' && (
                                 <div className="text-[10px] text-lav font-semibold mb-1">✦ Journal AI</div>
