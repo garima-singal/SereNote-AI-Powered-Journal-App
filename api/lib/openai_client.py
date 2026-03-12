@@ -4,11 +4,13 @@ from openai import OpenAI
 _client = None
 
 def get_client() -> OpenAI:
-    """Returns a shared OpenAI client instance."""
     global _client
     if _client is not None:
         return _client
-    _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    _client = OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"],
+        http_client=None,  
+    )
     return _client
 
 
@@ -19,19 +21,6 @@ def chat(
     temperature: float = 0.7,
     json_mode: bool = False,
 ) -> str:
-    """
-    Simple chat completion wrapper.
-
-    Args:
-        system_prompt: Sets the AI's role and behaviour
-        user_prompt:   The actual content/question
-        max_tokens:    Max length of the response
-        temperature:   0.0 = deterministic, 1.0 = creative
-        json_mode:     If True, forces the response to be valid JSON
-
-    Returns:
-        The response text as a string.
-    """
     client = get_client()
 
     kwargs = {
@@ -57,12 +46,6 @@ def chat_with_history(
     max_tokens: int = 800,
     temperature: float = 0.7,
 ) -> str:
-    """
-    Chat completion with full conversation history.
-    Used by the /chat endpoint for multi-turn journal conversations.
-
-    messages format: [{"role": "user"|"assistant", "content": "..."}]
-    """
     client = get_client()
 
     full_messages = [{"role": "system", "content": system_prompt}] + messages
