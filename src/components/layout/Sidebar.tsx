@@ -12,6 +12,7 @@ const NAV = [
     { to: '/bookmarks', label: 'Bookmarks', icon: '◈', end: false },
     { to: '/insights', label: 'Insights', icon: '◎', end: false },
     { to: '/search', label: 'Search', icon: '⌕', end: false },
+    { to: '/chat', label: 'Chat', icon: '✦', end: false },
 ]
 
 const BOTTOM_NAV = [

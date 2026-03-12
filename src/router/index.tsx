@@ -10,6 +10,7 @@ import { InsightsPage } from '@/pages/InsightsPage'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { SearchPage } from '@/pages/SearchPage'
+import { ChatPage } from '@/pages/ChatPage'
 
 // ── LOADING SPINNER ───────────────────────────────────────────────────────────
 // Shown while Firebase is checking auth state on first load (~200-500ms)
@@ -84,10 +85,8 @@ export const router = createBrowserRouter([
             { path: 'settings', element: <SettingsPage /> },
             { path: 'profile', element: <ProfilePage /> },
             { path: 'insights', element: <InsightsPage /> },
-            {
-                path: 'search',
-                element: <SearchPage />
-            },
+            { path: 'search', element: <SearchPage /> },
+            { path: 'chat', element: <ChatPage /> }
         ],
     },
     {
