@@ -45,6 +45,10 @@ export const DashboardPage = () => {
     const [aiPromptTheme, setAiPromptTheme] = useState('')
     const [aiPromptLoading, setAiPromptLoading] = useState(false)
     const [aiPromptFetched, setAiPromptFetched] = useState(false)
+    const [weeklySummary, setWeeklySummary] = useState('')
+    const [weeklyLoading, setWeeklyLoading] = useState(false)
+    const [weeklyFetched, setWeeklyFetched] = useState(false)
+    const [weeklyCount, setWeeklyCount] = useState(0)
 
     // Load aiOptIn from user settings
     useEffect(() => {
@@ -98,6 +102,32 @@ export const DashboardPage = () => {
     ]
     const staticPrompt = prompts[new Date().getDay()]
     const prompt = aiPrompt || staticPrompt
+
+    const generateWeeklySummary = async () => {
+        setWeeklyLoading(true)
+        try {
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) return
+            const res = await fetch('/api/ai/summary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({}),
+            })
+            const data = await res.json()
+            if (res.ok && data.summary) {
+                setWeeklySummary(data.summary)
+                setWeeklyCount(data.entryCount ?? 0)
+                setWeeklyFetched(true)
+            }
+        } catch {
+            // silently fail
+        } finally {
+            setWeeklyLoading(false)
+        }
+    }
 
     const totalWords = entries.reduce((a, e) => a + e.wordCount, 0)
     const thisMonthCount = entries.filter(
@@ -390,6 +420,53 @@ export const DashboardPage = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Weekly Summary — only shown when aiOptIn */}
+                {aiOptIn && (
+                    <div className="bg-lav-pale border border-lav/20 rounded-2xl p-5
+                          hover:shadow-sm transition-shadow duration-200
+                          sm:col-span-2 lg:col-span-1">
+                        <div className="flex items-center justify-between mb-2.5">
+                            <div className="text-[10px] font-semibold text-lav uppercase tracking-wider">
+                                ✦ Week in Review
+                            </div>
+                            {weeklyFetched && (
+                                <span className="text-[10px] text-lav/60">
+                                    {weeklyCount} {weeklyCount === 1 ? 'entry' : 'entries'}
+                                </span>
+                            )}
+                        </div>
+
+                        {weeklyLoading ? (
+                            <div className="flex items-center gap-2 py-3">
+                                <div className="w-3 h-3 border border-lav border-t-transparent
+                                rounded-full animate-spin shrink-0" />
+                                <span className="text-xs text-muted italic">Summarising your week…</span>
+                            </div>
+                        ) : weeklySummary ? (
+                            <p className="text-xs text-ink2 leading-relaxed font-lora italic mb-3">
+                                {weeklySummary}
+                            </p>
+                        ) : (
+                            <p className="text-xs text-muted italic mb-3">
+                                Generate a narrative summary of your week based on your entries.
+                            </p>
+                        )}
+
+                        <button
+                            onClick={() => {
+                                setWeeklyFetched(false)
+                                setWeeklySummary('')
+                                generateWeeklySummary()
+                            }}
+                            disabled={weeklyLoading}
+                            className="text-xs text-lav font-medium hover:underline
+                         transition-colors disabled:opacity-50"
+                        >
+                            {weeklyFetched ? '↺ Regenerate' : '✦ Generate summary'}
+                        </button>
+                    </div>
+                )}
 
                 {/* Quick Stats */}
                 <div className="bg-card border border-border rounded-2xl p-5">
