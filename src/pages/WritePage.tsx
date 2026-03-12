@@ -167,6 +167,25 @@ export const WritePage = () => {
         }
     }
 
+    // ── EMBED (fire-and-forget after save) ──────────────────
+    const embedEntry = async (entryId: string) => {
+        try {
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) return
+            // Fire and forget — don't await, don't show errors to user
+            fetch('/api/ai/embed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ entryId }),
+            })
+        } catch {
+            // Silently ignore — RAG will fall back to Firestore if this fails
+        }
+    }
+
     // ── HANDLERS ─────────────────────────────────────────────
     const handleTitleChange = (v: string) => {
         setTitle(v)
