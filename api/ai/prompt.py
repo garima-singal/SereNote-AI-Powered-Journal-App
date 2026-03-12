@@ -22,7 +22,7 @@ Rules:
 - The prompt should feel like a natural next step in their self-reflection journey
 - Keep it to one clear, open-ended question or gentle directive
 - Make it warm, curious, and inviting — not clinical or therapeutic
-- If entries are in Hinglish or Hindi, write the prompt in the same language mix
+- Write the prompt in easy English language.
 - Do NOT give generic prompts like "What are you grateful for today?"
 
 Response format (JSON only):
