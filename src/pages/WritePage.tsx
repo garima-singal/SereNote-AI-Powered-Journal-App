@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import { createEntry, updateEntry, getEntry } from '@/services/firebase/entries'
+import { auth } from '@/services/firebase/config'
 import { getUserProfile } from '@/services/firebase/users'
 import { useBookmark } from '@/hooks/useBookmark'
 import { Editor } from '@/components/editor/Editor'
@@ -42,6 +43,8 @@ export const WritePage = () => {
 
     // AI state
     const [aiOptIn, setAiOptIn] = useState(false)
+    const [polishing, setPolishing] = useState(false)
+    const [polishChanges, setPolishChanges] = useState('')
 
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -131,6 +134,35 @@ export const WritePage = () => {
             save(t, b, bt, m, tg, wc, id)
         }, 2000)
     }, [save])
+
+    // ── POLISH ───────────────────────────────────────────────
+    const handlePolish = async () => {
+        if (!docId || !user || polishing) return
+        setPolishing(true)
+        setPolishChanges('')
+        try {
+            const token = await auth.currentUser?.getIdToken()
+            if (!token) throw new Error('Not authenticated')
+            const res = await fetch('/api/ai/polish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ entryId: docId }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error ?? 'Polish failed')
+            // Update editor content with polished HTML
+            setBody(data.polishedHtml)
+            setPolishChanges(data.changes ?? '')
+            toast.success('✦ Entry polished!')
+        } catch (e: any) {
+            toast.error(e.message ?? 'Polish failed')
+        } finally {
+            setPolishing(false)
+        }
+    }
 
     // ── HANDLERS ─────────────────────────────────────────────
     const handleTitleChange = (v: string) => {
@@ -267,6 +299,30 @@ export const WritePage = () => {
                             </button>
                         )}
 
+                        {/* Polish button — only when AI on + entry saved + has content */}
+                        {aiOptIn && docId && wordCount >= 10 && (
+                            <button
+                                onClick={handlePolish}
+                                disabled={polishing}
+                                title="Polish grammar & clarity with AI"
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5
+                                           rounded-lg border border-lav/40 text-lav
+                                           hover:bg-lav-pale transition-all
+                                           disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {polishing ? (
+                                    <>
+                                        <span className="w-3 h-3 border border-lav
+                                                         border-t-transparent rounded-full
+                                                         animate-spin" />
+                                        Polishing…
+                                    </>
+                                ) : (
+                                    <>✦ Polish</>
+                                )}
+                            </button>
+                        )}
+
                         {/* Save button */}
                         <button
                             onClick={() => save(title, body, bodyText, moods, tags, wordCount, docId, true)}
@@ -337,6 +393,7 @@ export const WritePage = () => {
                     <Editor
                         title={title}
                         body={body}
+                        polishedBody={polishChanges ? body : undefined}
                         focusMode={focusMode}
                         onTitleChange={handleTitleChange}
                         onBodyChange={handleBodyChange}

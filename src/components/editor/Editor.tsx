@@ -11,12 +11,13 @@ import TextAlign from '@tiptap/extension-text-align'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Image from '@tiptap/extension-image'
-import { FontFamily } from '@tiptap/extension-font-family'
+import FontFamily from '@tiptap/extension-font-family'
 import { EditorToolbar } from './EditorToolbar'
 
 interface EditorProps {
     title: string
     body: string
+    polishedBody?: string
     focusMode: boolean
     onTitleChange: (title: string) => void
     onBodyChange: (html: string, text: string, wordCount: number) => void
@@ -25,6 +26,7 @@ interface EditorProps {
 export const Editor = ({
     title,
     body,
+    polishedBody,
     focusMode,
     onTitleChange,
     onBodyChange,
@@ -82,6 +84,13 @@ export const Editor = ({
             editor.commands.setContent(body)
         }
     }, [editor, body])
+
+    // Force-replace content when polish returns new HTML
+    useEffect(() => {
+        if (editor && polishedBody) {
+            editor.commands.setContent(polishedBody)
+        }
+    }, [editor, polishedBody])
 
     // Image upload handler
     const handleImageUpload = useCallback(() => {
