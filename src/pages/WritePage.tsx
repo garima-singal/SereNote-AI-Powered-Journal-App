@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
@@ -43,6 +43,28 @@ export const WritePage = () => {
 
     // AI state
     const [aiOptIn, setAiOptIn] = useState(false)
+    const [panelWidth, setPanelWidth] = useState(280)
+    const isResizing = React.useRef(false)
+
+    const startResize = (e: React.MouseEvent) => {
+        isResizing.current = true
+        const startX = e.clientX
+        const startWidth = panelWidth
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!isResizing.current) return
+            const delta = startX - e.clientX
+            const newWidth = Math.min(480, Math.max(220, startWidth + delta))
+            setPanelWidth(newWidth)
+        }
+        const onMouseUp = () => {
+            isResizing.current = false
+            window.removeEventListener('mousemove', onMouseMove)
+            window.removeEventListener('mouseup', onMouseUp)
+        }
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('mouseup', onMouseUp)
+    }
     const [polishing, setPolishing] = useState(false)
     const [, setPolishChanges] = useState('')
 
@@ -427,8 +449,18 @@ export const WritePage = () => {
 
                 {/* Meta panel — desktop, hidden in focus mode */}
                 {metaOpen && !focusMode && (
-                    <div className="w-[240px] shrink-0 border-l border-border
-                          overflow-y-auto bg-card hidden sm:block">
+                    <div
+                        className="shrink-0 border-l border-border
+                                   overflow-y-auto bg-card hidden sm:block relative"
+                        style={{ width: panelWidth }}
+                    >
+                        {/* Drag handle */}
+                        <div
+                            onMouseDown={startResize}
+                            className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize
+                                       hover:bg-lav/30 transition-colors z-10"
+                            title="Drag to resize"
+                        />
                         <MetaPanel
                             entryId={docId}
                             aiOptIn={aiOptIn}

@@ -15,15 +15,12 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
     const [error, setError] = useState<string>('')
     const [remaining, setRemaining] = useState<number | null>(null)
 
-    // Don't render if conditions aren't met
     if (!aiOptIn || !entryId || wordCount < 10) return null
 
     const generate = async () => {
         setStatus('loading')
         setError('')
-
         try {
-            // Get fresh Firebase ID token
             const token = await auth.currentUser?.getIdToken()
             if (!token) throw new Error('Not authenticated')
 
@@ -37,15 +34,11 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
             })
 
             const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.error ?? 'Something went wrong')
-            }
+            if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
 
             setReflection(data.reflection)
             setRemaining(data.remaining)
             setStatus('done')
-
         } catch (e: any) {
             setError(e.message ?? 'Failed to generate reflection')
             setStatus('error')
@@ -53,7 +46,7 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
     }
 
     return (
-        <div className="border-t border-border pt-4 mt-2">
+        <div className="border-t border-border mx-4 pt-4 mt-2 pb-6">
 
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
@@ -68,7 +61,7 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
                 )}
             </div>
 
-            {/* Idle state — show button */}
+            {/* Idle — Generate button */}
             {status === 'idle' && (
                 <button
                     onClick={generate}
@@ -98,11 +91,14 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
                             {reflection}
                         </p>
                     </div>
+                    {/* Generate another — full width outlined button */}
                     <button
                         onClick={() => { setStatus('idle'); setReflection('') }}
-                        className="text-[10px] text-muted hover:text-lav transition-colors"
+                        className="w-full py-2 rounded-xl border border-border text-xs
+                       text-muted hover:border-lav hover:text-lav
+                       transition-all"
                     >
-                        Generate another
+                        ↺ Generate another
                     </button>
                 </div>
             )}
@@ -115,9 +111,11 @@ export const AIReflectionPanel = ({ entryId, wordCount, aiOptIn }: Props) => {
                     </div>
                     <button
                         onClick={() => setStatus('idle')}
-                        className="text-[10px] text-muted hover:text-ink transition-colors"
+                        className="w-full py-2 rounded-xl border border-border text-xs
+                       text-muted hover:border-terra hover:text-terra
+                       transition-all"
                     >
-                        Try again
+                        ↺ Try again
                     </button>
                 </div>
             )}
