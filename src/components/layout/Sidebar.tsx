@@ -5,6 +5,7 @@ import {
     LayoutDashboard,
     ScrollText,
     Bookmark,
+    Mail,
     BarChart2,
     Search,
     MessageCircle,
@@ -12,6 +13,7 @@ import {
     Settings,
     PenLine,
     X,
+    LogOut,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -25,6 +27,7 @@ const NAV = [
     { to: '/insights', label: 'Insights', Icon: BarChart2, end: false },
     { to: '/search', label: 'Search', Icon: Search, end: false },
     { to: '/chat', label: 'Chat', Icon: MessageCircle, end: false },
+    { to: '/letters', label: 'Letters', Icon: Mail, end: false },
 ]
 
 const BOTTOM_NAV = [
@@ -134,7 +137,9 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
 
             {/* ── USER FOOTER ── */}
             <div className="px-4 py-4 border-t border-border">
-                <div className="flex items-center gap-3">
+
+                {/* Avatar + name + email */}
+                <div className="flex items-center gap-3 mb-3">
                     {user?.photoURL ? (
                         <img
                             src={user.photoURL}
@@ -152,14 +157,24 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
                         <div className="text-xs font-medium text-ink truncate">
                             {user?.displayName ?? 'You'}
                         </div>
-                        <button
-                            onClick={handleSignOut}
-                            className="text-[10px] text-muted hover:text-terra transition-colors"
-                        >
-                            Sign out
-                        </button>
+                        <div className="text-[10px] text-muted truncate">
+                            {user?.email ?? ''}
+                        </div>
                     </div>
                 </div>
+
+                {/* Divider + sign out */}
+                <div className="border-t border-border pt-2.5">
+                    <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-2 text-[11px] font-medium
+                       text-terra hover:opacity-75 transition-opacity"
+                    >
+                        <LogOut size={13} />
+                        Sign out
+                    </button>
+                </div>
+
             </div>
 
         </div>

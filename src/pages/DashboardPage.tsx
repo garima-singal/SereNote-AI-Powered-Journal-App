@@ -104,6 +104,31 @@ export const DashboardPage = () => {
     const staticPrompt = prompts[new Date().getDay()]
     const prompt = aiPrompt || staticPrompt
 
+    // ── LETTERS ─────────────────────────────────────────────────
+    const [readyLetters, setReadyLetters] = useState(0)
+
+    useEffect(() => {
+        if (!user || !aiOptIn) return
+        const checkLetters = async () => {
+            try {
+                const token = await auth.currentUser?.getIdToken()
+                if (!token) return
+                const res = await fetch('/api/ai/letters', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    const now = new Date()
+                    const ready = (data.letters ?? []).filter((l: any) =>
+                        !l.opened && new Date(l.deliverAt) <= now
+                    ).length
+                    setReadyLetters(ready)
+                }
+            } catch { /* silently fail */ }
+        }
+        checkLetters()
+    }, [user, aiOptIn])
+
     const generateWeeklySummary = async () => {
         setWeeklyLoading(true)
         try {
@@ -473,6 +498,28 @@ export const DashboardPage = () => {
                         >
                             {weeklyFetched ? '↺ Regenerate' : '✦ Generate summary'}
                         </button>
+                    </div>
+                )}
+
+                {/* Letter ready notification */}
+                {aiOptIn && readyLetters > 0 && (
+                    <div
+                        onClick={() => navigate('/letters')}
+                        className="bg-accent-pale border border-accent/30 rounded-2xl p-5
+                       cursor-pointer hover:border-accent hover:shadow-sm
+                       transition-all"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">✉️</span>
+                            <div>
+                                <div className="text-sm font-semibold text-accent">
+                                    {readyLetters === 1 ? 'A letter is ready for you!' : `${readyLetters} letters are ready!`}
+                                </div>
+                                <div className="text-xs text-accent/70 mt-0.5">
+                                    Your past self wrote to you — tap to open
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
 

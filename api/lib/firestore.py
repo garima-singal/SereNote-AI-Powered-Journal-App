@@ -159,6 +159,40 @@ def clear_chat_history(uid: str):
         doc.reference.delete()
 
 
+# ── LETTERS ──────────────────────────────────────────────────
+
+def save_letter(uid: str, letter: str, deliver_at: str, deliver_in: int, user_note: str) -> str:
+    """Save a letter to future self. Returns the document ID."""
+    db  = get_db()
+    ref = db.collection("users").document(uid)            .collection("letters").add({
+                "letter":    letter,
+                "deliverAt": deliver_at,
+                "deliverIn": deliver_in,
+                "userNote":  user_note,
+                "opened":    False,
+                "createdAt": SERVER_TIMESTAMP,
+            })
+    return ref[1].id
+
+
+def get_letters(uid: str) -> list[dict]:
+    """Fetch all letters for a user, newest first."""
+    db   = get_db()
+    docs = db.collection("users").document(uid)             .collection("letters")             .order_by("createdAt", direction="DESCENDING")             .stream()
+    letters = []
+    for doc in docs:
+        data    = doc.to_dict()
+        data["id"] = doc.id
+        letters.append(data)
+    return letters
+
+
+def mark_letter_opened(uid: str, letter_id: str):
+    """Mark a letter as opened."""
+    db = get_db()
+    db.collection("users").document(uid)      .collection("letters").document(letter_id)      .update({"opened": True})
+
+
 def get_weekly_summary(uid: str, week_of: str) -> dict | None:
     """Fetch a weekly summary by week_of date string."""
     db = get_db()

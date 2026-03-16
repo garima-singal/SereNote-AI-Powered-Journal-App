@@ -11,10 +11,8 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { SearchPage } from '@/pages/SearchPage'
 import { ChatPage } from '@/pages/ChatPage'
+import { LetterPage } from '@/pages/LetterPage'
 
-// ── LOADING SPINNER ───────────────────────────────────────────────────────────
-// Shown while Firebase is checking auth state on first load (~200-500ms)
-// Without this, there's a blank white flash before auth resolves
 const AuthLoading = () => (
     <div className="flex items-center justify-center h-screen bg-bg">
         <div className="flex flex-col items-center gap-3">
@@ -24,11 +22,7 @@ const AuthLoading = () => (
     </div>
 )
 
-// ── PROTECTED ROUTE ───────────────────────────────────────────────────────────
-// Wraps any page that requires authentication.
-// - Firebase initializing → spinner (prevents blank screen or auth flash)
-// - No user → redirect to /auth (replace so they can't press Back)
-// - Logged in → render children
+
 export const ProtectedRoute = ({
     children
 }: {
@@ -86,7 +80,8 @@ export const router = createBrowserRouter([
             { path: 'profile', element: <ProfilePage /> },
             { path: 'insights', element: <InsightsPage /> },
             { path: 'search', element: <SearchPage /> },
-            { path: 'chat', element: <ChatPage /> }
+            { path: 'chat', element: <ChatPage /> },
+            { path: 'letters', element: <LetterPage /> }
         ],
     },
     {
