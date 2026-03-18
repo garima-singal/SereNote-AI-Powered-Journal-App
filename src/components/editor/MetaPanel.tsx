@@ -23,6 +23,8 @@ export const MetaPanel = ({
     onTagsChange,
 }: MetaPanelProps) => {
     const [tagInput, setTagInput] = useState('')
+    const dragTag = useRef<string | null>(null)
+    const dragOverTag = useRef<string | null>(null)
     const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
     const [tagsLoading, setTagsLoading] = useState(false)
     const [moodLoading, setMoodLoading] = useState(false)
@@ -117,6 +119,33 @@ export const MetaPanel = ({
 
     const dismissTag = (tag: string) => {
         setTagSuggestions(prev => prev.filter(t => t !== tag))
+    }
+
+    // ── DRAG TO REORDER TAGS ─────────────────────────────────
+    const handleDragStart = (tag: string) => {
+        dragTag.current = tag
+    }
+
+    const handleDragEnter = (tag: string) => {
+        dragOverTag.current = tag
+    }
+
+    const handleDragEnd = () => {
+        if (!dragTag.current || !dragOverTag.current) return
+        if (dragTag.current === dragOverTag.current) return
+
+        const newTags = [...tags]
+        const fromIdx = newTags.indexOf(dragTag.current)
+        const toIdx = newTags.indexOf(dragOverTag.current)
+        if (fromIdx === -1 || toIdx === -1) return
+
+        // Swap positions
+        newTags.splice(fromIdx, 1)
+        newTags.splice(toIdx, 0, dragTag.current)
+
+        onTagsChange(newTags)
+        dragTag.current = null
+        dragOverTag.current = null
     }
 
     // Add tag on Enter or comma
@@ -262,9 +291,17 @@ export const MetaPanel = ({
                     {tags.map(t => (
                         <span
                             key={t}
+                            draggable
+                            onDragStart={() => handleDragStart(t)}
+                            onDragEnter={() => handleDragEnter(t)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={e => e.preventDefault()}
                             className="flex items-center gap-1 px-2 py-0.5 bg-surface
-                         text-ink2 rounded-lg text-xs"
+                         text-ink2 rounded-lg text-xs cursor-grab
+                         active:cursor-grabbing active:opacity-50
+                         hover:bg-border transition-all select-none"
                         >
+                            <span className="text-muted/40 text-[10px] mr-0.5">⠿</span>
                             #{t}
                             <button
                                 onClick={e => {
